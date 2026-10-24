@@ -22,3 +22,15 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -t passguard .
+      - name: Smoke test
+        run: |
+          docker run -d --name pg -p 8000:8000 -e DEMO_MODE=true passguard
+          for i in $(seq 1 30); do curl -sf localhost:8000/api/health && break; sleep 1; done
+          curl -sf localhost:8000/api/config | grep -q '"demo_mode":true'
+          curl -sf -X POST localhost:8000/api/auth/demo | grep -q access_token
