@@ -54,3 +54,19 @@ def test_login_rate_limit(client):
     codes = [client.post("/api/auth/login", json=body).status_code for _ in range(11)]
     assert codes[:10] == [401] * 10
     assert codes[10] == 429
+
+
+def login_codes(client, ips):
+    body = {"username": "nobody", "password": "Wrong-Password#1"}
+    return [client.post("/api/auth/login", json=body, headers={"CF-Connecting-IP": ip}).status_code for ip in ips]
+
+
+def test_cloudflare_header_ignored_by_default(client):
+    # без доверия к прокси подделанный заголовок не помогает обойти лимит
+    assert login_codes(client, [f"10.0.0.{i}" for i in range(11)])[-1] == 429
+
+
+def test_cloudflare_header_separates_clients(client, monkeypatch):
+    monkeypatch.setattr(get_settings(), "trust_cloudflare", True)
+    assert login_codes(client, ["1.1.1.1"] * 10 + ["2.2.2.2"])[-1] == 401
+    assert login_codes(client, ["1.1.1.1"])[-1] == 429

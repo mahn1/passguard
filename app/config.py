@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     token_ttl_minutes: int = 60 * 12
     demo_mode: bool = False  # публичное демо: вход без регистрации и плашка «не храните настоящие пароли»
     demo_ttl_hours: int = 24  # через сколько удалять демо-аккаунты
+    # Включать только за Cloudflare: тогда IP клиента берётся из CF-Connecting-IP, иначе заголовок легко подделать
+    trust_cloudflare: bool = False
 
 
 def _ensure_keys(settings: Settings) -> Settings:
@@ -34,9 +36,13 @@ def _ensure_keys(settings: Settings) -> Settings:
         settings.encryption_key = Fernet.generate_key().decode()
         new_lines.append(f"ENCRYPTION_KEY={settings.encryption_key}")
     if new_lines:
-        with ENV_FILE.open("a", encoding="utf-8") as f:
-            f.write("\n".join(new_lines) + "\n")
-        log.warning("Сгенерированы ключи и записаны в %s. Не теряйте этот файл и не публикуйте его.", ENV_FILE)
+        try:
+            with ENV_FILE.open("a", encoding="utf-8") as f:
+                f.write("\n".join(new_lines) + "\n")
+            log.warning("Сгенерированы ключи и записаны в %s. Не теряйте этот файл и не публикуйте его.", ENV_FILE)
+        except OSError:
+            # на хостинге каталог может быть только для чтения: ключи живут до перезапуска, как и временная база
+            log.warning("Ключи сгенерированы, но %s недоступен для записи — они действуют до перезапуска.", ENV_FILE)
     return settings
 
 

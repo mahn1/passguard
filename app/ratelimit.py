@@ -6,6 +6,15 @@ from threading import Lock
 
 from fastapi import HTTPException, Request, status
 
+from app.config import get_settings
+
+
+def client_ip(request: Request) -> str:
+    # за прокси request.client — адрес самого прокси, и лимит стал бы общим для всех посетителей
+    if get_settings().trust_cloudflare and (ip := request.headers.get("cf-connecting-ip")):
+        return ip
+    return request.client.host if request.client else "unknown"
+
 
 class RateLimiter:
     """Скользящее окно в памяти процесса. Для одного инстанса этого достаточно, для нескольких нужен Redis."""
@@ -17,7 +26,7 @@ class RateLimiter:
         self._lock = Lock()
 
     def __call__(self, request: Request) -> None:
-        key = request.client.host if request.client else "unknown"
+        key = client_ip(request)
         now = time.monotonic()
         with self._lock:
             hits = self._hits[key]

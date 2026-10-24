@@ -2,7 +2,20 @@
 name = "passguard"
 version = "1.0.0"
 description = "Генератор, проверка надёжности и зашифрованное хранилище паролей на FastAPI"
-requires-python = ">=3.11"
+requires-python = "==3.12.*"
+# Те же версии, что в requirements.txt; отсюда зависимости берёт FastAPI Cloud
+dependencies = [
+    "fastapi[standard]==0.162.0",
+    "SQLAlchemy==2.1.6",
+    "pydantic==2.14.1",
+    "pydantic-settings==2.16.1",
+    "bcrypt==5.0.0",
+    "PyJWT==2.15.1",
+    "cryptography==50.0.2",
+]
+
+[tool.fastapi]
+entrypoint = "app.main:app"
 
 [tool.ruff]
 line-length = 120
