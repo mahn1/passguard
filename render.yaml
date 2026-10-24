@@ -1,0 +1,17 @@
+# Деплой на Render (бесплатный тариф): New → Blueprint → выбрать этот репозиторий
+services:
+  - type: web
+    name: passguard
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: DEMO_MODE
+        value: "true"
+      - key: SECRET_KEY
+        generateValue: true
+      # ENCRYPTION_KEY не задаём: на бесплатном тарифе диск временный, база и ключ создаются заново при каждом запуске
