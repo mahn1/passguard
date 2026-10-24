@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PassGuard — генератор, проверка и хранилище паролей</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top__inner">
+    <div class="brand"><span class="brand__shield">🛡</span>PassGuard</div>
+    <nav class="tabs" id="tabs">
+      <button class="tab is-active" data-view="generator">Генератор</button>
+      <button class="tab" data-view="checker">Проверка</button>
+      <button class="tab" data-view="vault">Хранилище</button>
+      <button class="tab" data-view="audit">Аудит</button>
+    </nav>
+    <div class="user" id="user-box">
+      <button class="btn btn--ghost btn--sm" id="login-open">Войти</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- Генератор -->
+  <section class="view is-active" id="view-generator">
+    <div class="card">
+      <h1>Генератор паролей</h1>
+      <p class="muted">Случайные пароли из криптостойкого генератора <code>secrets</code>. Ничего не сохраняется, пока вы не добавите пароль в хранилище.</p>
+      <div class="output">
+        <input class="output__value" id="gen-output" readonly aria-label="Сгенерированный пароль">
+        <button class="icon-btn" id="gen-copy" title="Скопировать">⧉</button>
+        <button class="icon-btn" id="gen-refresh" title="Новый пароль">↻</button>
+      </div>
+      <div class="meter" id="gen-meter"><i></i></div>
+      <p class="meter__text" id="gen-meter-text"></p>
+      <div class="gen-opts">
+        <label class="range">Длина: <b id="len-out">16</b>
+          <input type="range" id="gen-length" min="6" max="64" value="16">
+        </label>
+        <label class="switch"><input type="checkbox" id="opt-lower" checked><span></span>Строчные a–z</label>
+        <label class="switch"><input type="checkbox" id="opt-upper" checked><span></span>Заглавные A–Z</label>
+        <label class="switch"><input type="checkbox" id="opt-digits" checked><span></span>Цифры 0–9</label>
+        <label class="switch"><input type="checkbox" id="opt-symbols" checked><span></span>Символы !@#…</label>
+        <label class="switch"><input type="checkbox" id="opt-ambiguous"><span></span>Без похожих: l, 1, O, 0</label>
+      </div>
+      <button class="btn" id="gen-save">Сохранить в хранилище</button>
+    </div>
+  </section>
+
+  <!-- Проверка -->
+  <section class="view" id="view-checker">
+    <div class="card">
+      <h1>Проверка надёжности</h1>
+      <p class="muted">Проверка идёт на сервере по защищённому запросу. Пароль не сохраняется и не пишется в логи.</p>
+      <div class="output">
+        <input class="output__value" id="check-input" type="password" placeholder="Введите пароль" autocomplete="off">
+        <button class="icon-btn" id="check-eye" title="Показать">👁</button>
+      </div>
+      <div class="meter" id="check-meter"><i></i></div>
+      <div class="report" id="check-report">
+        <div class="stat"><span>Оценка</span><b id="r-label">—</b></div>
+        <div class="stat"><span>Энтропия</span><b id="r-entropy">—</b></div>
+        <div class="stat"><span>Офлайн-подбор</span><b id="r-offline">—</b><small>10 млрд попыток/с</small></div>
+        <div class="stat"><span>Онлайн-подбор</span><b id="r-online">—</b><small>100 попыток/ч</small></div>
+      </div>
+      <ul class="notes" id="r-notes"></ul>
+    </div>
+  </section>
+
+  <!-- Хранилище -->
+  <section class="view" id="view-vault">
+    <div class="card">
+      <div class="card__head">
+        <h1>Хранилище</h1>
+        <button class="btn" id="add-entry">+ Добавить</button>
+      </div>
+      <div class="toolbar">
+        <input type="search" id="search" placeholder="Поиск по названию, логину, сайту">
+        <select id="sort" aria-label="Сортировка">
+          <option value="title">По названию</option>
+          <option value="updated">Недавно изменённые</option>
+          <option value="weakest">Сначала слабые</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Название</th><th>Логин</th><th>Надёжность</th><th>Изменён</th><th></th></tr></thead>
+          <tbody id="entries"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="entries-empty" hidden>Здесь пока пусто. Добавьте первую запись или сохраните пароль из генератора.</p>
+    </div>
+  </section>
+
+  <!-- Аудит -->
+  <section class="view" id="view-audit">
+    <div class="card">
+      <h1>Аудит безопасности</h1>
+      <div class="audit-top">
+        <div class="ring" id="ring"><b id="health">—</b><span>здоровье</span></div>
+        <div class="audit-stats">
+          <div class="stat"><span>Всего записей</span><b id="a-total">0</b></div>
+          <div class="stat stat--warn"><span>Слабые</span><b id="a-weak">0</b></div>
+          <div class="stat stat--warn"><span>Повторы</span><b id="a-reused">0</b></div>
+          <div class="stat stat--warn"><span>Старше 180 дней</span><b id="a-old">0</b></div>
+        </div>
+      </div>
+      <div id="audit-lists"></div>
+    </div>
+  </section>
+</main>
+
+<!-- Вход и регистрация -->
+<dialog class="modal" id="auth-modal">
+  <form class="modal__box" id="auth-form" method="dialog">
+    <h2 id="auth-title">Вход</h2>
+    <label>Имя пользователя<input name="username" autocomplete="username" required minlength="3"></label>
+    <label>Мастер-пароль<input name="password" type="password" autocomplete="current-password" required minlength="8"></label>
+    <p class="error" id="auth-error" hidden></p>
+    <button class="btn btn--full" type="submit" id="auth-submit">Войти</button>
+    <button class="link" type="button" id="auth-switch">Нет аккаунта? Зарегистрироваться</button>
+  </form>
+</dialog>
+
+<!-- Запись -->
+<dialog class="modal" id="entry-modal">
+  <form class="modal__box" id="entry-form" method="dialog">
+    <h2 id="entry-title">Новая запись</h2>
+    <label>Название<input name="title" required maxlength="100" placeholder="Например, Почта"></label>
+    <label>Логин<input name="login" maxlength="200" autocomplete="off"></label>
+    <label>Пароль
+      <span class="pass-field">
+        <input name="password" id="entry-password" type="password" maxlength="256" autocomplete="new-password">
+        <button type="button" class="icon-btn" id="entry-eye" title="Показать">👁</button>
+        <button type="button" class="icon-btn" id="entry-gen" title="Сгенерировать">⚄</button>
+      </span>
+    </label>
+    <div class="meter meter--sm" id="entry-meter"><i></i></div>
+    <label>Сайт<input name="url" maxlength="500" placeholder="https://"></label>
+    <label>Заметки<textarea name="notes" rows="3" maxlength="5000"></textarea></label>
+    <p class="error" id="entry-error" hidden></p>
+    <div class="modal__actions">
+      <button class="btn btn--danger" type="button" id="entry-delete" hidden>Удалить</button>
+      <button class="btn btn--ghost" type="button" id="entry-cancel">Отмена</button>
+      <button class="btn" type="submit">Сохранить</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
