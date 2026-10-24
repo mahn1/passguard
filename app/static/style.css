@@ -41,6 +41,11 @@ code { font-family: var(--mono); color: var(--accent); }
 .icon-btn:hover { border-color: var(--accent); }
 .link { border: 0; background: none; color: var(--accent); font-weight: 600; }
 
+.demo-bar { border-bottom: 1px solid rgba(234, 179, 8, .3); background: rgba(234, 179, 8, .08); color: #fde68a; font-size: 14px; }
+.demo-bar[hidden], .btn[hidden] { display: none; }
+.demo-bar__inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 0; }
+.demo-bar .btn { flex: none; white-space: nowrap; }
+
 main { padding: 32px 0 64px; }
 .view { display: none; }
 .view.is-active { display: block; animation: in .25s ease; }
@@ -131,6 +136,7 @@ main { padding: 32px 0 64px; }
   .tabs { order: 3; width: 100%; margin: 0; overflow-x: auto; }
   .tab { flex: 1; padding: 7px 8px; font-size: 13px; white-space: nowrap; }
   .user { margin-left: auto; }
+  .demo-bar__inner { flex-direction: column; align-items: stretch; }
   .card { padding: 20px; }
   .output__value { font-size: 16px; }
   .gen-opts { grid-template-columns: 1fr; }

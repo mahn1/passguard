@@ -123,16 +123,18 @@ function setAuthMode(mode) {
 }
 $("auth-switch").addEventListener("click", () => setAuthMode(authMode === "login" ? "register" : "login"));
 $("auth-modal").addEventListener("click", (e) => { if (e.target === $("auth-modal")) $("auth-modal").close(); });
+async function signIn(data) {
+  token = data.access_token;
+  sessionStorage.setItem("token", token);
+  $("auth-form").reset();
+  if ($("auth-modal").open) $("auth-modal").close();
+  await renderUser();
+}
 $("auth-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = e.target;
   try {
-    const data = await api(`/api/auth/${authMode}`, { method: "POST", body: { username: f.username.value.trim(), password: f.password.value } });
-    token = data.access_token;
-    sessionStorage.setItem("token", token);
-    f.reset();
-    $("auth-modal").close();
-    await renderUser();
+    await signIn(await api(`/api/auth/${authMode}`, { method: "POST", body: { username: f.username.value.trim(), password: f.password.value } }));
     toast(authMode === "login" ? "С возвращением!" : "Аккаунт создан");
   } catch (err) {
     $("auth-error").textContent = err.message;
@@ -140,7 +142,27 @@ $("auth-form").addEventListener("submit", async (e) => {
   }
 });
 
+// Демо-режим: вход одним кликом в аккаунт с примерами записей
+async function startDemo() {
+  try {
+    await signIn(await api("/api/auth/demo", { method: "POST" }));
+    toast("Демо-аккаунт готов: загляните в хранилище и аудит");
+    show("vault");
+  } catch (err) {
+    toast(err.message);
+  }
+}
+async function initDemo() {
+  const { demo_mode } = await api("/api/config").catch(() => ({}));
+  if (!demo_mode) return;
+  $("demo-bar").hidden = false;
+  $("auth-demo").hidden = false;
+}
+$("demo-start").addEventListener("click", startDemo);
+$("auth-demo").addEventListener("click", startDemo);
+
 async function renderUser() {
+  $("demo-start").hidden = Boolean(token);
   if (!token) {
     $("user-box").innerHTML = '<button class="btn btn--ghost btn--sm" id="login-open">Войти</button>';
     $("login-open").addEventListener("click", openAuth);
@@ -280,4 +302,5 @@ $("audit-lists").addEventListener("click", (e) => { const li = e.target.closest(
 
 // ---------- Старт ----------
 renderUser();
+initDemo();
 generate();

@@ -26,6 +26,13 @@
   </div>
 </header>
 
+<div class="demo-bar" id="demo-bar" hidden>
+  <div class="wrap demo-bar__inner">
+    <span>⚠ <b>Демо-версия.</b> Не храните здесь настоящие пароли: данные удаляются через сутки и при перезапуске сервера.</span>
+    <button class="btn btn--sm" id="demo-start">Попробовать без регистрации</button>
+  </div>
+</div>
+
 <main class="wrap">
   <!-- Генератор -->
   <section class="view is-active" id="view-generator">
@@ -125,6 +132,7 @@
     <p class="error" id="auth-error" hidden></p>
     <button class="btn btn--full" type="submit" id="auth-submit">Войти</button>
     <button class="link" type="button" id="auth-switch">Нет аккаунта? Зарегистрироваться</button>
+    <button class="btn btn--ghost btn--full" type="button" id="auth-demo" hidden>Попробовать без регистрации</button>
   </form>
 </dialog>
 

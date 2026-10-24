@@ -8,6 +8,7 @@ os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 import pytest
 from fastapi.testclient import TestClient
 
+from app import ratelimit
 from app.db import Base, engine
 from app.main import app
 
@@ -18,6 +19,8 @@ STRONG = "Lavka-Sinyaya#2077"
 def client():
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
+    for limiter in ratelimit.ALL:
+        limiter.reset()
     with TestClient(app) as c:
         yield c
 

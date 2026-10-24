@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     secret_key: str = ""  # подпись JWT и HMAC-отпечатков паролей
     encryption_key: str = ""  # ключ Fernet для шифрования паролей в хранилище
     token_ttl_minutes: int = 60 * 12
+    demo_mode: bool = False  # публичное демо: вход без регистрации и плашка «не храните настоящие пароли»
+    demo_ttl_hours: int = 24  # через сколько удалять демо-аккаунты
 
 
 def _ensure_keys(settings: Settings) -> Settings:

@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.config import get_settings
 from app.db import Base, engine
 from app.routers import auth, entries, tools
 
@@ -37,3 +38,9 @@ def index() -> FileResponse:
 @app.get("/api/health", tags=["Служебное"])
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/api/config", tags=["Служебное"])
+def public_config() -> dict[str, bool]:
+    """Публичные настройки для интерфейса."""
+    return {"demo_mode": get_settings().demo_mode}
